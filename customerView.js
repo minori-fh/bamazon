@@ -3,6 +3,8 @@ var mysql = require("mysql");
 var table = require("table");
 
 var count = 0; 
+var id; 
+var quantity; 
 
 // Create connection with mysql
 
@@ -52,12 +54,38 @@ function whatID(){
             },
         ])
         .then(function(inquirerResponse){
+            id = inquirerResponse.id
             if (inquirerResponse.id <= count){
-                console.log("okay!")
+                whatQuantity(id);
             } else {
                 console.log("A product with this ID does not exist!")
             };
         });
-    })
-}
+    });
+};
 
+function whatQuantity(id){
+
+    connection.query("SELECT * FROM products WHERE item_id = ?",[id], function(err, res){
+        if (err) throw err;
+        quantity = res[0].stock_quantity
+        
+    inquirer
+    .prompt([
+        {
+        type: "input",
+        message: "What quantity are you looking to purchase?",
+        name: "quantity"
+        },
+    ])
+    .then(function(inquirerResponse){
+        if (inquirerResponse.quantity <= quantity){
+            console.log("okay!")
+        } else {
+            console.log("Not enough in stock!")
+        }
+
+
+    });
+});
+};
