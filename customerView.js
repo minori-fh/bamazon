@@ -1,13 +1,12 @@
 var inquirer = require("inquirer");
 var mysql = require("mysql");
-var table = require("table");
+var Table = require('cli-table2');
 
 var count = 0; 
 var id; 
 var quantity; 
 
 // Create connection with mysql
-
 var connection = mysql.createConnection({
     host: "localhost",
   
@@ -28,22 +27,54 @@ var connection = mysql.createConnection({
 function showAll(){
     connection.query("SELECT * FROM products", function(err, res){
         if (err) throw err; 
-        // console.log(res)
+// -------------- TABLE ATTEMPT ------------------
+//     var table = new Table({
+//         chars: { 'top': '═' , 'top-mid': '╤' , 'top-left': '╔' , 'top-right': '╗'
+//             , 'bottom': '═' , 'bottom-mid': '╧' , 'bottom-left': '╚' , 'bottom-right': '╝'
+//             , 'left': '║' , 'left-mid': '╟' , 'mid': '─' , 'mid-mid': '┼'
+//             , 'right': '║' , 'right-mid': '╢' , 'middle': '│' }
+//     });
+
+//   for (var i = 0; i < res.legnth; i++){
+//     table.push(
+//         [res[i].item_id, res[i].product_name, res[i].department_name],
+//         // [res[i].item_id, res[i].product_name, res[i].department_name, res[i].price, res[i].stock_quantity]
+//     );
+//   }
+
+//   console.log(table.toString());
+
+   
+// -------------- TABLE ATTEMPT ------------------
         console.log("ID" + " | " + "PRODUCT_NAME" + " | " + "DEPT_NAME" + " | " + "PRICE" + " | " + "STOCK")
 
         for (var i = 0; i < res.length; i++){
             console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].department_name + " | " + "$" + res[i].price + " | " + res[i].stock_quantity)
         };
 
-        whatID();
+        inquirer
+        .prompt([
+            {
+            type: "list",
+            message: "What would you like to do today?",
+            choices: ["make a purchase", "quit"],
+            name: "command"
+            },
+        ])
+        .then(function(inquirerResponse){
+            if (inquirerResponse.command === "make a purchase"){
+                whatID();
+            } else {
+                connection.end();
+            };
+        });
     });
 };
 
 function whatID(){
-
     connection.query("SELECT * FROM products", function(err, res){
         if (err) throw err;
-        count = res.length + 1
+        count = res.length
 
         inquirer
         .prompt([
@@ -59,16 +90,26 @@ function whatID(){
                 whatQuantity(id);
             } else {
                 console.log("A product with this ID does not exist!")
+                whatID();
             };
         });
     });
 };
 
-function whatQuantity(id){
+function updateQuantity(id, newQuantity){
+    connection.query("UPDATE products SET ? WHERE ?", [{stock_quantity: newQuantity}, {item_id: id}], function(err){
+        if (err) throw err;
+        console.log("Quantity has been updated! Your purchase is complete. \nHere is an updated product listing: ")
+        showAll();
+    // connection.end();
+    });
+};
 
+function whatQuantity(id){
     connection.query("SELECT * FROM products WHERE item_id = ?",[id], function(err, res){
         if (err) throw err;
-        quantity = res[0].stock_quantity
+        stockQuantity = res[0].stock_quantity
+        id = res[0].item_id
         
     inquirer
     .prompt([
@@ -79,13 +120,13 @@ function whatQuantity(id){
         },
     ])
     .then(function(inquirerResponse){
-        if (inquirerResponse.quantity <= quantity){
-            console.log("okay!")
+        if (inquirerResponse.quantity <= stockQuantity){
+            newQuantity = stockQuantity - inquirerResponse.quantity
+            updateQuantity(id, newQuantity) 
         } else {
             console.log("Not enough in stock!")
-        }
-
-
+            showAll();
+        };
     });
 });
 };
