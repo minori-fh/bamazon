@@ -8,10 +8,10 @@ Customer view: initially displays all the products available in inventory and pr
 Manager view: manager actions include 1.) view products for sale 2.) view low inventory (less than 5) 2.) add to existing inventory 3.) add a new product 4.) quit. 
 
 ## Gifs of App
-Customer View
+Customer View <br/>
 ![Site Screenshot](assets/customerView.gif)
 
-Manager View
+Manager View <br/>
 ![Site Screenshot](assets/managerView.gif)
 
 
