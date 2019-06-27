@@ -1,5 +1,6 @@
 var inquirer = require("inquirer");
 var mysql = require("mysql");
+var Table = require('cli-table2');
 
 var addInv;
 var itemID;
@@ -13,6 +14,8 @@ var newProdCat;
 var newProdName; 
 var newProdPrice;
 var newProdStock;
+
+var table; 
 
 // Create connection with mysql
 var connection = mysql.createConnection({
@@ -29,22 +32,7 @@ var connection = mysql.createConnection({
   connection.connect(function(err){
       if (err) throw err; 
 
-      inquirer
-      .prompt([
-          {
-          type: "list",
-          message: "What would you like to do today?",
-          choices: ["view manager actions", "quit"],
-          name: "command"
-          },
-      ])
-      .then(function(inquirerResponse){
-          if (inquirerResponse.command === "view manager actions"){
-              managerActions();
-          } else {
-              connection.end();
-          };
-      });
+    managerActions()
   });
 
   function managerActions(){
@@ -53,7 +41,7 @@ var connection = mysql.createConnection({
         {
         type: "list",
         message: "What would you like to do today?",
-        choices: ["view products for sale", "view low inventory", "add to inventory", "add new product"],
+        choices: ["view products for sale", "view low inventory", "add to inventory", "add new product", "quit"],
         name: "managerActions"
         },
     ])
@@ -66,6 +54,8 @@ var connection = mysql.createConnection({
             whichInv()
         } else if (inquirerResponse.managerActions === "add new product"){
             addNew()
+        } else if (inquirerResponse.managerActions === "quit"){
+            connection.end()
         }
     });
   };
@@ -74,11 +64,19 @@ var connection = mysql.createConnection({
     connection.query("SELECT * FROM products", function(err, res){
         if (err) throw err; 
 
-        console.log("ID" + " | " + "PRODUCT_NAME" + " | " + "DEPT_NAME" + " | " + "PRICE" + " | " + "STOCK")
-
+        table = new Table({
+            head: ['ID', 'PRODUCT NAME', 'DEPT', 'PRICE', 'STOCK']
+            , colWidths: [5, 20, 15, 10, 10]
+        });
+    
         for (var i = 0; i < res.length; i++){
-            console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].department_name + " | " + "$" + res[i].price + " | " + res[i].stock_quantity)
+            table.push(
+                [res[i].item_id, res[i].product_name, res[i].department_name, "$" + res[i].price, res[i].stock_quantity]
+            )
         };
+    
+        console.log(table.toString());
+
         managerActions();
     });
   };
@@ -87,17 +85,24 @@ var connection = mysql.createConnection({
     connection.query("SELECT product_name, stock_quantity, price, department_name, item_id FROM products GROUP BY product_name, stock_quantity, price, department_name, item_id HAVING stock_quantity < 5", function(err, res){
         if (err) throw err; 
 
-        console.log("ID" + " | " + "PRODUCT_NAME" + " | " + "DEPT_NAME" + " | " + "PRICE" + " | " + "STOCK")
-
+        table = new Table({
+            head: ['ID', 'PRODUCT NAME', 'DEPT', 'PRICE', 'STOCK']
+            , colWidths: [5, 20, 15, 10, 10]
+        });
+    
         for (var i = 0; i < res.length; i++){
-            console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].department_name + " | " + "$" + res[i].price + " | " + res[i].stock_quantity)
+            table.push(
+                [res[i].item_id, res[i].product_name, res[i].department_name, "$" + res[i].price, res[i].stock_quantity]
+            )
         };
+    
+        console.log(table.toString());
+
         managerActions();
     });
   };
 
   function addInv(id, newStock){
-    console.log("hello")
     connection.query("UPDATE products SET ? WHERE ?",[{stock_quantity: newStock}, {item_id: id}], function(err, res){
         if (err) throw err; 
 
@@ -190,37 +195,18 @@ var connection = mysql.createConnection({
                 newProdPrice = parseFloat(inquirerResponse.newProdPrice)
                 newProdStock = parseFloat(inquirerResponse.newProdStock)
 
-                // console.log(newProdCat)
-                // console.log(newProdName)
-                // console.log(newProdPrice)
-                // console.log(newProdStock)
-
                 updateNew(newProdName, newProdCat, newProdPrice, newProdStock)
-        
-            // connection.query("INSERT INTO products SET ?",[{product_name: newProdName}, {department_name: newProdCat}, {price: newProdPrice}, {stock_quantity: newProdStock}], function(err){
-            //     if (err) throw err; 
-        
-            //     console.log("Inventory has been updated!")
-            //     viewProducts()
-            // });
+    
             });
     });
   };
 
   function updateNew(newProdName, newProdCat, newProdPrice, newProdStock){
 
-    console.log(newProdCat)
-    console.log(newProdName)
-    console.log(newProdPrice)
-    console.log(newProdStock)
-
-    connection.query("INSERT INTO products SET ?",[{product_name: newProdName}, {department_name: newProdCat}, {price: 40}, {stock_quantity: 5},], function(err){
+    var sql = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES ?"
+    var values = [[newProdName, newProdCat, newProdPrice, newProdStock]]
+    connection.query(sql, [values], function(err){
         if (err) throw err; 
-
-        console.log(newProdCat)
-        console.log(newProdName)
-        console.log(newProdPrice)
-        console.log(newProdStock)
 
         console.log("Inventory has been updated!")
         viewProducts()

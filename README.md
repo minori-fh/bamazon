@@ -1,7 +1,7 @@
 # bamazon
 
 ## Directions on how to use bamazon
-A node bamazon app! Bamazon a command line node app that uses mySQL Workbench. The app initially displays all the products available in inventory and prompts the user if they would like to make a purchase or quit. 
+A node bamazon app! Bamazon is a command line node app that uses mySQL Workbench. The app initially displays all the products available in inventory and prompts the user if they would like to make a purchase or quit. 
 
 ## Gifs of App
 ![Site Screenshot](assets/customerView.gif)
