@@ -5,6 +5,7 @@ var Table = require('cli-table2');
 var count = 0; 
 var id; 
 var quantity; 
+var table; 
 
 // Create connection with mysql
 var connection = mysql.createConnection({
@@ -27,31 +28,19 @@ var connection = mysql.createConnection({
 function showAll(){
     connection.query("SELECT * FROM products", function(err, res){
         if (err) throw err; 
-// -------------- TABLE ATTEMPT ------------------
-//     var table = new Table({
-//         chars: { 'top': '═' , 'top-mid': '╤' , 'top-left': '╔' , 'top-right': '╗'
-//             , 'bottom': '═' , 'bottom-mid': '╧' , 'bottom-left': '╚' , 'bottom-right': '╝'
-//             , 'left': '║' , 'left-mid': '╟' , 'mid': '─' , 'mid-mid': '┼'
-//             , 'right': '║' , 'right-mid': '╢' , 'middle': '│' }
-//     });
 
-//   for (var i = 0; i < res.legnth; i++){
-//     table.push(
-//         [res[i].item_id, res[i].product_name, res[i].department_name],
-//         // [res[i].item_id, res[i].product_name, res[i].department_name, res[i].price, res[i].stock_quantity]
-//     );
-//   }
+    table = new Table({
+        head: ['ID', 'PRODUCT NAME', 'DEPT', 'PRICE', 'STOCK']
+        , colWidths: [5, 20, 15, 10, 10]
+    });
 
-//   console.log(table.toString());
+    for (var i = 0; i < res.length; i++){
+        table.push(
+            [res[i].item_id, res[i].product_name, res[i].department_name, "$" + res[i].price, res[i].stock_quantity]
+        )
+    };
 
-   
-// -------------- TABLE ATTEMPT ------------------
-        console.log("ID" + " | " + "PRODUCT_NAME" + " | " + "DEPT_NAME" + " | " + "PRICE" + " | " + "STOCK")
-
-        for (var i = 0; i < res.length; i++){
-            console.log(res[i].item_id + " | " + res[i].product_name + " | " + res[i].department_name + " | " + "$" + res[i].price + " | " + res[i].stock_quantity)
-        };
-
+    console.log(table.toString());
         inquirer
         .prompt([
             {
@@ -130,3 +119,5 @@ function whatQuantity(id){
     });
 });
 };
+
+
